@@ -1,16 +1,8 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Req,
-  Get,
-  Query,
-  Param,
-  Put,
-  Delete,
-  HttpStatus,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { Controller, Post, Body, Req, Get, Query, Param, Put, Delete, UseGuards, } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { SearchArticleDto } from './dto/search-article.dto';
@@ -36,6 +28,9 @@ export class ArticlesController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('author')
+  @ApiBearerAuth()
   async create(@Body() dto: CreateArticleDto, @Req() req: any) {
     const user = req.user;
     const userId = user?.sub ?? user?.id;
@@ -56,7 +51,7 @@ export class ArticlesController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Search and list published articles' })
+  @ApiOperation({ summary: 'Search published articles' })
   @ApiQuery({ name: 'category', required: false, type: String, description: 'Exact category (Politics|Tech|Sports|Health)' })
   @ApiQuery({ name: 'author', required: false, type: String, description: 'Partial author name' })
   @ApiQuery({ name: 'q', required: false, type: String, description: 'Keyword search in title' })
@@ -81,6 +76,9 @@ export class ArticlesController {
   }
 
   @Get('me')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('author')
+  @ApiBearerAuth()
   async findMine(
     @Query('page') page: string,
     @Query('size') size: string,
@@ -117,6 +115,7 @@ export class ArticlesController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async findOne(@Param('id') id: string, @Req() req: any) {
     const user = req.user;
     const userId = user?.sub ?? user?.id ?? null;
@@ -130,6 +129,9 @@ export class ArticlesController {
   }
 
   @Put(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('author')
+  @ApiBearerAuth()
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateArticleDto,
@@ -154,6 +156,9 @@ export class ArticlesController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('author')
+  @ApiBearerAuth()
   async remove(@Param('id') id: string, @Req() req: any) {
     const user = req.user;
     const userId = user?.sub ?? user?.id;

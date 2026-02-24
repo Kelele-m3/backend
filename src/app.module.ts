@@ -8,6 +8,7 @@ import { dataSourceOptionsConfig } from './shared/configs/data-source-options.co
 import { UsersModule } from './users/users.module';
 import { ArticlesModule } from './articles/articles.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     }),
     UsersModule,
     ArticlesModule,
+    AuthModule,
     AnalyticsModule,
   ],
   controllers: [AppController],

@@ -21,14 +21,14 @@ export class SearchArticleDto {
   @IsString()
   q?: string;
 
-  @ApiPropertyOptional({ description: 'Page number (default 1)', example: 1 })
+  @ApiPropertyOptional({ description: 'Page number (default 1)' })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   page?: number = 1;
 
-  @ApiPropertyOptional({ description: 'Page size (default 10, max 100)', example: 10 })
+  @ApiPropertyOptional({ description: 'Page size (default 10, max 100)' })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
