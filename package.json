@@ -1,9 +1,9 @@
 {
-  "name": "backend",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
-  "private": true,
+  "name": "news-app",
+  "version": "1.0.0",
+  "description": "This is a News API where authors publish content and readers consume it, featuring an analytics engine that tracks user engagement and generates daily performance reports.",
+  "author": "Kelele",
+  "private": false,
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
