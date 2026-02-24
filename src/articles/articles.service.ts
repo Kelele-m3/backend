@@ -1,15 +1,10 @@
-import {
-  Injectable,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException, } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Article, ArticleStatus } from './entities/article.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
-import { ArticleQueryDto } from './dto/article-query.dto';
 import { SearchArticleDto } from './dto/search-article.dto';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -60,7 +55,6 @@ export class ArticlesService {
   }
 
   async findAll(query: SearchArticleDto) {
-    console.log('Querying articles with:', query);
     const { category, author, q, page = 1, size = 10 } = query;
     const qb = this.articleRepository.createQueryBuilder('article')
       .leftJoinAndSelect('article.author', 'author')
