@@ -2,23 +2,13 @@ import { Injectable, ForbiddenException, NotFoundException, } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Article, ArticleStatus } from './entities/article.entity';
+import { ArticleViewDto } from './dto/article-view.dto';
 import { User } from '../users/entities/user.entity';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { SearchArticleDto } from './dto/search-article.dto';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-
-export interface ArticleViewDto {
-  id: string;
-  title: string;
-  content: string;
-  category: string;
-  status: ArticleStatus;
-  authorId: string;
-  authorName?: string;
-  createdAt: Date;
-}
 
 @Injectable()
 export class ArticlesService {
@@ -30,18 +20,7 @@ export class ArticlesService {
     @InjectQueue('read-log') private readonly readLogQueue: Queue,
   ) {}
 
-  private toView(article: Article): ArticleViewDto {
-    return {
-      id: article.id,
-      title: article.title,
-      content: article.content,
-      category: article.category,
-      status: article.status,
-      authorId: article.authorId,
-      authorName: article.author?.name,
-      createdAt: article.createdAt,
-    };
-  }
+  
 
   async create(createDto: CreateArticleDto, authorId: string) {
     const user = await this.userRepository.findOne({ where: { id: authorId } });
@@ -51,7 +30,7 @@ export class ArticlesService {
     const article = this.articleRepository.create({ ...createDto, authorId });
     const saved = await this.articleRepository.save(article);
     saved.author = user;
-    return this.toView(saved);
+    return ArticleViewDto.fromEntity(saved);
   }
 
   async findAll(query: SearchArticleDto) {
@@ -72,7 +51,7 @@ export class ArticlesService {
       .getManyAndCount();
 
     return {
-      items: items.map((a) => this.toView(a)),
+      items: items.map((a) => ArticleViewDto.fromEntity(a)),
       page,
       size,
       total,
@@ -95,15 +74,18 @@ export class ArticlesService {
       // don't block on queue errors
     }
 
-    return this.toView(article);
+    return ArticleViewDto.fromEntity(article);
   }
 
-  async findMine(authorId: string, page = 1, size = 10, includeDeleted = false) {
+  async findMine(authorId: string, query: SearchArticleDto, includeDeleted = false) {
+    const { category, q, page = 1, size = 10 } = query;
     const qb = this.articleRepository.createQueryBuilder('article')
       .leftJoinAndSelect('article.author', 'author')
       .where('article.author_id = :authorId', { authorId });
 
     if (!includeDeleted) qb.andWhere('article.deleted_at IS NULL');
+    if (category) qb.andWhere('article.category = :category', { category });
+    if (q) qb.andWhere('article.title LIKE :q', { q: `%${q}%` });
 
     const [items, total] = await qb
       .orderBy('article.createdAt', 'DESC')
@@ -111,7 +93,7 @@ export class ArticlesService {
       .take(size)
       .getManyAndCount();
 
-    return { items: items.map((a) => this.toView(a)), page, size, total };
+    return { items: items.map((a) => ArticleViewDto.fromEntity(a)), page, size, total };
   }
 
   async update(id: string, updateDto: UpdateArticleDto, authorId: string) {
@@ -121,7 +103,7 @@ export class ArticlesService {
 
     Object.assign(article, updateDto);
     const saved = await this.articleRepository.save(article);
-    return this.toView(saved);
+    return ArticleViewDto.fromEntity(saved);
   }
 
   async remove(id: string, authorId: string) {

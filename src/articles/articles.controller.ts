@@ -79,26 +79,24 @@ export class ArticlesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('author')
   @ApiBearerAuth()
-  async findMine(
-    @Query('page') page: string,
-    @Query('size') size: string,
-    @Query('includeDeleted') includeDeleted: string,
-    @Req() req: any,
-  ) {
+  @ApiOperation({ summary: "Get author's articles (filters like search)" })
+  @ApiQuery({ name: 'category', required: false, type: String, description: 'Exact category (Politics|Tech|Sports|Health)' })
+  @ApiQuery({ name: 'q', required: false, type: String, description: 'Keyword search in title' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'size', required: false, type: Number })
+  @ApiQuery({ name: 'includeDeleted', required: false, type: Boolean })
+  async findMine(@Query() query: SearchArticleDto, @Query('includeDeleted') includeDeleted: string, @Req() req: any) {
     const user = req.user;
     const userId = user?.sub ?? user?.id;
     const role = user?.role;
     if (!userId || role !== 'author') {
-      return this.baseResponse(false, 'Forbidden', null, [
-        'Only authors can access this resource',
-      ]);
+      return this.baseResponse(false, 'Forbidden', null, ['Only authors can access this resource']);
     }
-
-    const p = page ? parseInt(page, 10) : 1;
-    const s = size ? parseInt(size, 10) : 10;
+    const p = query.page ?? 1;
+    const s = query.size ?? 10;
     const include = includeDeleted === 'true';
     try {
-      const res = await this.articlesService.findMine(userId, p, s, include);
+      const res = await this.articlesService.findMine(userId, { ...query, page: p, size: s }, include);
       return {
         Success: true,
         Message: 'OK',
@@ -109,8 +107,7 @@ export class ArticlesController {
         Errors: null,
       };
     } catch (e: any) {
-      console.error(e);
-      return this.baseResponse(false, e.message ?? 'Error', null, [e.message]);
+        return this.baseResponse(false, e.message ?? 'Error', null, [e.message]);
     }
   }
 
@@ -132,11 +129,7 @@ export class ArticlesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('author')
   @ApiBearerAuth()
-  async update(
-    @Param('id') id: string,
-    @Body() dto: UpdateArticleDto,
-    @Req() req: any,
-  ) {
+  async update(@Param('id') id: string, @Body() dto: UpdateArticleDto, @Req() req: any) {
     const user = req.user;
     const userId = user?.sub ?? user?.id;
     const role = user?.role;
