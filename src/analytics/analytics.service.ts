@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { Article } from '../articles/entities/article.entity';
 import { DashboardQueryDto } from './dto/dashboard-query.dto';
 import { DailyAnalytics } from './entities/daily-analytics.entity';
@@ -28,7 +28,7 @@ export class AnalyticsService {
 
     const [items, total] = await Promise.all([
       qb.getRawMany(),
-      this.articleRepository.count({ where: { authorId } }),
+      this.articleRepository.count({ where: { authorId, deletedAt: IsNull() } }),
     ]);
 
     return {

@@ -1,98 +1,127 @@
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="NestJS Logo" /></a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+<h1 align="center">News API Backend</h1>
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+A robust, production-ready RESTful API built with [NestJS](https://nestjs.com/). This project serves as the backend for a news platform where Authors can publish content and Readers can consume it. It features a simple analytics engine to record high-frequency user engagement and process view counts into daily reports for performance tracking.
 
-## Project setup
+## Key Features
 
+*   **User Management**: Secure user signup and JWT-based authentication with role-based access control (RBAC) for Authors and Readers.
+*   **Content Lifecycle**: Full CRUD operations for articles, including soft-deletion, exclusively for authors.
+*   **Public News Feed**: A paginated and filterable public endpoint for readers to discover published articles.
+*   **Engagement Tracking**: Asynchronous read tracking for every article view, capturing both registered and guest user interactions.
+*   **Analytics Engine**: A background job queue (BullMQ) processes raw read logs into aggregated daily analytics.
+*   **Author Dashboard**: A protected endpoint for authors to view performance metrics for their articles, including total view counts.
+
+## Tech Stack
+
+*   **Framework**: [NestJS](https://nestjs.com/)
+*   **Database**: [TypeORM](https://typeorm.io/) with a SQL-based database + PostgreSQL
+*   **Authentication**: JWT, [Passport.js](http://www.passportjs.org/)
+*   **Async Processing**: [BullMQ](https://bullmq.io/) for background jobs
+*   **Validation**: `class-validator`, `class-transformer`
+*   **API Documentation**: Swagger
+
+## API Endpoints
+
+### Auth
+*   `POST /auth/signup` - Register a new user (Author or Reader).
+*   `POST /auth/login` - Log in and receive a JWT.
+
+### Articles (Public)
+*   `GET /articles` - Get a paginated list of published articles. Supports filtering by `category`, `author`, and `q` (keyword).
+*   `GET /articles/:id` - Get a single article by its ID. Triggers a read event.
+
+### Articles (Author-Only)
+*   `POST /articles` - Create a new article (defaults to Draft status).
+*   `GET /articles/me` - Get a paginated list of articles written by the authenticated author.
+*   `PUT /articles/:id` - Update an article.
+*   `DELETE /articles/:id` - Soft-delete an article.
+
+### Analytics (Author-Only)
+*   `GET /author/dashboard` - View engagement metrics for the authenticated author's articles.
+
+## Installation
+
+## Running Locally
+
+To get the application running on your local machine, follow these steps.
+
+**Prerequisites**:
+You must have [Node.js](https://nodejs.org/), [PostgreSQL](https://www.postgresql.org/), and [Redis](https://redis.io/) installed.
+
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/Kelele-m3/testing-nestjs.git
+    cd backend
+    ```
+
+2.  **Install dependencies**:
+    ```bash
+    $ npm install
+    ```
+
+3.  **Configure Environment**
+    Create a `.env` file in the project root. The application requires this to connect to the database and other services.
+    ```env
+    # PostgreSQL
+    DATABASE_HOST=localhost
+    DATABASE_PORT=5432
+    DATABASE_USERNAME=postgres
+    DATABASE_PASSWORD=postgres
+    DATABASE_NAME=news_api
+
+    # Redis
+    REDIS_HOST=localhost
+    REDIS_PORT=6379
+
+    # Authentication
+    JWT_SECRET=your-super-secret-and-long-jwt-secret
+    ```
+
+4.  **Create the database**
+    This script uses the variables from your `.env` file.
+    ```bash
+    $ ts-node scripts/create-db.ts
+    ```
+
+5.  **Set up Database Schema**
+    This project is configured to use TypeORM's `synchronize` feature for development. It will automatically create the database tables based on your entity files when the application starts up.
+
+    > **Note**: `synchronize` is not suitable for production environments. For production, you should use TypeORM Migrations.
+
+6.  **Run the application**
+    ```bash
+    # development
+    $ npm run start
+    # The application will be available at http://localhost:3000
+
+    # watch mode
+    $ npm run start:dev
+
+    # production mode
+    $ npm run start:prod
+    ```
+
+## API Documentation
+
+Once the application is running, you can explore the API endpoints and interact with them through the Swagger documentation, available at http://localhost:3000/api.
+
+## Testing
+
+Run end-to-end tests:
 ```bash
-$ npm install
-```
-
-## Compile and run the project
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
 # e2e tests
 $ npm run test:e2e
+```
 
+Generate a test coverage report:
+```bash
 # test coverage
 $ npm run test:cov
 ```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
 ```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
