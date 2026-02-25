@@ -12,6 +12,7 @@ import { Queue } from 'bullmq';
 
 @Injectable()
 export class ArticlesService {
+  // Initializes the ArticlesService with repositories and queue
   constructor(
     @InjectRepository(Article)
     private readonly articleRepository: Repository<Article>,
@@ -20,8 +21,7 @@ export class ArticlesService {
     @InjectQueue('read-log') private readonly readLogQueue: Queue,
   ) {}
 
-  
-
+  // Creates a new article for an author
   async create(createDto: CreateArticleDto, authorId: string) {
     const user = await this.userRepository.findOne({ where: { id: authorId } });
     if (!user) throw new NotFoundException('Author not found');
@@ -33,6 +33,7 @@ export class ArticlesService {
     return ArticleViewDto.fromEntity(saved);
   }
 
+  // Finds all published articles matching search criteria
   async findAll(query: SearchArticleDto) {
     const { category, author, q, page = 1, size = 10 } = query;
     const qb = this.articleRepository.createQueryBuilder('article')
@@ -58,6 +59,7 @@ export class ArticlesService {
     };
   }
 
+  // Finds a specific article by ID and records a read log
   async findOne(id: string, readerId?: string) {
     const article = await this.articleRepository.findOne({ where: { id }, relations: ['author'] });
     if (!article || article.deletedAt) {
@@ -71,31 +73,35 @@ export class ArticlesService {
     try {
       await this.readLogQueue.add('create', { articleId: id, readerId: readerId ?? null });
     } catch (e) {
-      // don't block on queue errors
     }
 
     return ArticleViewDto.fromEntity(article);
   }
 
-  async findMine(authorId: string, query: SearchArticleDto, includeDeleted = false) {
+  // Finds articles belonging to a specific author
+  async findMine(authorId: string, query: SearchArticleDto, includeDeleted) {
     const { category, q, page = 1, size = 10 } = query;
     const qb = this.articleRepository.createQueryBuilder('article')
       .leftJoinAndSelect('article.author', 'author')
-      .where('article.author_id = :authorId', { authorId });
+      .where('article.author_id = :authorId', { authorId })
+      .withDeleted();
 
-    if (!includeDeleted) qb.andWhere('article.deleted_at IS NULL');
-    if (category) qb.andWhere('article.category = :category', { category });
-    if (q) qb.andWhere('article.title LIKE :q', { q: `%${q}%` });
+    if (includeDeleted == false) 
+      qb.andWhere('article.deleted_at IS NULL');
+    if (category) 
+      qb.andWhere('article.category = :category', { category });
+    if (q) 
+      qb.andWhere('article.title LIKE :q', { q: `%${q}%` });
 
     const [items, total] = await qb
       .orderBy('article.createdAt', 'DESC')
       .skip((page - 1) * size)
       .take(size)
       .getManyAndCount();
-
     return { items: items.map((a) => ArticleViewDto.fromEntity(a)), page, size, total };
   }
 
+  // Updates an existing article
   async update(id: string, updateDto: UpdateArticleDto, authorId: string) {
     const article = await this.articleRepository.findOne({ where: { id } });
     if (!article) throw new NotFoundException('Article not found');
@@ -106,6 +112,7 @@ export class ArticlesService {
     return ArticleViewDto.fromEntity(saved);
   }
 
+  // Soft deletes an article
   async remove(id: string, authorId: string) {
     const article = await this.articleRepository.findOne({ where: { id } });
     if (!article) throw new NotFoundException('Article not found');

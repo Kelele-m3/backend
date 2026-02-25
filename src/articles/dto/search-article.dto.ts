@@ -1,5 +1,5 @@
-import { IsOptional, IsString, IsInt, Min, Max, IsIn } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsOptional, IsString, IsInt, Min, Max, IsIn, IsBoolean } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 const CATEGORIES = ['Politics', 'Tech', 'Sports', 'Health'] as const;
@@ -35,4 +35,17 @@ export class SearchArticleDto {
   @Min(1)
   @Max(100)
   size?: number = 10;
+
+  @ApiPropertyOptional({ description: 'Include soft-deleted articles (true/false)' })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === null || value === undefined) return undefined;
+    if (typeof value === 'boolean') return value;
+    const v = String(value).toLowerCase();
+    if (v === 'true' || v === '1') return true;
+    if (v === 'false' || v === '0') return false;
+    return undefined;
+  })
+  @IsBoolean()
+  includeDeleted?: boolean;
 }

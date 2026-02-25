@@ -13,12 +13,8 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
 
-  private baseResponse(
-    success: boolean,
-    message: string,
-    object: any = null,
-    errors?: string[],
-  ) {
+  // Helper to format standard API responses
+  private baseResponse(success: boolean, message: string, object: any = null, errors?: string[]) {
     return {
       Success: success,
       Message: message,
@@ -27,6 +23,7 @@ export class ArticlesController {
     };
   }
 
+  // Endpoint to create a new article
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('author')
@@ -50,6 +47,7 @@ export class ArticlesController {
     }
   }
 
+  // Endpoint to search for published articles
   @Get()
   @ApiOperation({ summary: 'Search published articles' })
   @ApiQuery({ name: 'category', required: false, type: String, description: 'Exact category (Politics|Tech|Sports|Health)' })
@@ -75,6 +73,7 @@ export class ArticlesController {
     }
   }
 
+  // Endpoint to get the authenticated author's articles
   @Get('me')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('author')
@@ -85,7 +84,7 @@ export class ArticlesController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'size', required: false, type: Number })
   @ApiQuery({ name: 'includeDeleted', required: false, type: Boolean })
-  async findMine(@Query() query: SearchArticleDto, @Query('includeDeleted') includeDeleted: string, @Req() req: any) {
+  async findMine(@Query() query: SearchArticleDto, @Req() req: any) {
     const user = req.user;
     const userId = user?.sub ?? user?.id;
     const role = user?.role;
@@ -94,7 +93,7 @@ export class ArticlesController {
     }
     const p = query.page ?? 1;
     const s = query.size ?? 10;
-    const include = includeDeleted === 'true';
+    const include = query.includeDeleted === undefined ? null : query.includeDeleted;
     try {
       const res = await this.articlesService.findMine(userId, { ...query, page: p, size: s }, include);
       return {
@@ -111,8 +110,11 @@ export class ArticlesController {
     }
   }
 
+  // Endpoint to get a specific article by ID
   @Get(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiOperation({ summary: 'Get article details' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async findOne(@Param('id') id: string, @Req() req: any) {
     const user = req.user;
     const userId = user?.sub ?? user?.id ?? null;
@@ -125,6 +127,7 @@ export class ArticlesController {
     }
   }
 
+  // Endpoint to update an article
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('author')
@@ -148,6 +151,7 @@ export class ArticlesController {
     }
   }
 
+  // Endpoint to delete an article
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('author')

@@ -28,7 +28,7 @@ export class ArticleViewDto {
   createdAt: Date;
 
   @ApiProperty({ required: false })
-  deletedAt: null | Date;
+  deletedAt: string;
 
   static fromEntity(article: Article): ArticleViewDto {
     const plain = {
@@ -40,7 +40,7 @@ export class ArticleViewDto {
       authorId: article.authorId,
       authorName: article.author?.name,
       createdAt: article.createdAt,
-      deletedAt: article.deletedAt,
+      deletedAt: article.deletedAt ? 'Deleted' : article.deletedAt
     };
 
     return plainToInstance(ArticleViewDto, plain);
