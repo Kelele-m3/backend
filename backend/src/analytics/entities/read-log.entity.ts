@@ -21,6 +21,10 @@ export class ReadLog {
   @JoinColumn({ name: 'reader_id' })
   reader: User | null;
 
+  /** Optional id for guest readers (e.g. from X-Guest-Id header) for deduplication. */
+  @Column({ name: 'guest_id', type: 'varchar', length: 255, nullable: true })
+  guestId: string | null;
+
   @CreateDateColumn({ name: 'read_at' })
   readAt: Date;
 }

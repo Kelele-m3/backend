@@ -7,6 +7,9 @@ import { Article } from '../articles/entities/article.entity';
 import { User } from '../users/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
 
+/** Same reader (user or guest) + same article within this window = one log only. */
+const DEDUPE_WINDOW_SECONDS = 60;
+
 @Injectable()
 export class ReadLogWorker implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(ReadLogWorker.name);
@@ -31,8 +34,8 @@ export class ReadLogWorker implements OnModuleInit, OnModuleDestroy {
 
     this.worker = new Worker(
       'read-log',
-      async (job: Job<{ articleId: string; readerId: string | null }>) => {
-        const { articleId, readerId } = job.data;
+      async (job: Job<{ articleId: string; readerId: string | null; guestId?: string | null }>) => {
+        const { articleId, readerId, guestId } = job.data;
         try {
           const article = await this.articleRepo.findOne({ where: { id: articleId } });
           if (!article) {
@@ -40,9 +43,29 @@ export class ReadLogWorker implements OnModuleInit, OnModuleDestroy {
             return;
           }
 
+          const since = new Date(Date.now() - DEDUPE_WINDOW_SECONDS * 1000);
+          const qb = this.readLogRepo
+            .createQueryBuilder('rl')
+            .where('rl.article_id = :articleId', { articleId })
+            .andWhere('rl.read_at > :since', { since });
+
+          if (readerId != null && readerId !== '') {
+            qb.andWhere('rl.reader_id = :readerId', { readerId });
+          } else if (guestId != null && guestId !== '') {
+            qb.andWhere('rl.guest_id = :guestId', { guestId });
+          } else {
+            qb.andWhere('rl.reader_id IS NULL').andWhere('rl.guest_id IS NULL');
+          }
+
+          const existing = await qb.take(1).getOne();
+          if (existing) {
+            return; // already logged this read in the window; skip
+          }
+
           const entry: Partial<ReadLog> = {
             articleId,
             readerId: readerId ?? null,
+            guestId: guestId ?? null,
           };
 
           await this.readLogRepo.save(this.readLogRepo.create(entry));

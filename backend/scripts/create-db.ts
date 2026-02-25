@@ -1,8 +1,10 @@
 // scripts/create-db.ts
 import { Client } from 'pg';
 import * as dotenv from 'dotenv';
+import { join } from 'path';
 
-dotenv.config();
+// Load .env from project root (parent of backend/)
+dotenv.config({ path: join(process.cwd(), '..', '.env') });
 
 async function createDB() {
   const client = new Client({

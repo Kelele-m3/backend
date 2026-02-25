@@ -26,6 +26,24 @@ A robust, production-ready RESTful API built with [NestJS](https://nestjs.com/).
 *   **Validation**: `class-validator`, `class-transformer`
 *   **API Documentation**: Swagger
 
+## Project structure
+
+All backend **source and config** live in the **`/backend`** folder. The **README**, **`.gitignore`**, and **`.env`** files stay at the **project root** (this directory).
+
+```
+/
+├── .env
+├── .gitignore
+├── README.md           (this file)
+├── package.json        (root scripts)
+└── backend/
+    ├── src/
+    ├── test/
+    ├── scripts/
+    ├── package.json
+    └── ...
+```
+
 ## API Endpoints
 
 ### Auth
@@ -56,17 +74,18 @@ You must have [Node.js](https://nodejs.org/), [PostgreSQL](https://www.postgresq
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/Kelele-m3/testing-nestjs.git
+    git clone https://github.com/Kelele-m3/backend.git
     cd backend
     ```
 
-2.  **Install dependencies**:
+2.  **Install dependencies** (from project root):
     ```bash
-    $ npm install
+    cd backend
+    npm install
     ```
 
 3.  **Configure Environment**
-    Create a `.env` file in the project root. The application requires this to connect to the database and other services.
+    Create a **`.env`** file in the **project root** (same level as this README). The application loads it from there.
     ```env
     # PostgreSQL
     DATABASE_HOST='localhost'
@@ -84,10 +103,11 @@ You must have [Node.js](https://nodejs.org/), [PostgreSQL](https://www.postgresq
     ```
 
 4.  **Create the database**
-    This script uses the variables from your `.env` file.
+    This script uses the variables from your root `.env` file.
     ```bash
     npm run create:db
     ```
+    (Run from project root; the script runs in `backend/` and reads `../.env`.)
 
 5.  **Set up Database Schema**
     This project is configured to use TypeORM's `synchronize` feature for development. It will automatically create the database tables based on your entity files when the application starts up.
@@ -95,17 +115,16 @@ You must have [Node.js](https://nodejs.org/), [PostgreSQL](https://www.postgresq
     > **Note**: `synchronize` is not suitable for production environments. For production, you should use TypeORM Migrations.
 
 6.  **Run the application**
+    From **project root**:
     ```bash
-    # development
-    $ npm run start
-    # The application will be available at http://localhost:3000
-
-    # watch mode
-    $ npm run start:dev
-
-    # production mode
-    $ npm run start:prod
+    npm run start
     ```
+    Or from the **backend** folder:
+    ```bash
+    cd backend
+    npm run start
+    ```
+    The application will be available at http://localhost:3000
 
 ## API Documentation
 

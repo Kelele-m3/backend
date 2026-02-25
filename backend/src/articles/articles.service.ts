@@ -59,15 +59,19 @@ export class ArticlesService {
     };
   }
 
-  // Finds a specific article by ID and records a read log
-  async findOne(id: string, readerId?: string) {
+  // Finds a specific article by ID and records a read log (readerId = auth user, guestId = optional guest id from header)
+  async findOne(id: string, readerId?: string | null, guestId?: string | null) {
     const article = await this.articleRepository.findOne({ where: { id }, relations: ['author'] });
     if (!article || article.deletedAt) {
       throw new NotFoundException('News article no longer available');
     }
 
     try {
-      await this.readLogQueue.add('create', { articleId: id, readerId: readerId ?? null });
+      await this.readLogQueue.add('create', {
+        articleId: id,
+        readerId: readerId ?? null,
+        guestId: guestId ?? null,
+      });
     } catch (e) {
     }
 

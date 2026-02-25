@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, Get, Query, Param, Put, Delete, UseGuards, } from '@nestjs/common';
+import { Controller, Post, Body, Req, Get, Query, Param, Put, Delete, UseGuards, Headers, } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
@@ -111,16 +111,17 @@ export class ArticlesController {
     }
   }
 
-  // Endpoint to get a specific article by ID
+  // Endpoint to get a specific article by ID (pass X-Guest-Id for guests so worker can dedupe per guest)
   @Get(':id')
   @ApiOperation({ summary: 'Get article details' })
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth()
-  async findOne(@Param('id') id: string, @Req() req: any) {
+  async findOne(@Param('id') id: string, @Req() req: any, @Headers('x-guest-id') guestId?: string) {
     const user = req.user;
     const userId = user?.sub ?? user?.id ?? null;
+    const guestIdOrNull = userId == null ? (guestId ?? null) : null;
     try {
-      const article = await this.articlesService.findOne(id, userId);
+      const article = await this.articlesService.findOne(id, userId, guestIdOrNull);
       return this.baseResponse(true, 'OK', article);
     } catch (e: any) {
       return this.baseResponse(false, e.message ?? 'Error', null, [e.message]);
