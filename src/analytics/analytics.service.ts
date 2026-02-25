@@ -4,11 +4,15 @@ import { Repository, IsNull } from 'typeorm';
 import { Article } from '../articles/entities/article.entity';
 import { DashboardQueryDto } from './dto/dashboard-query.dto';
 import { DailyAnalytics } from './entities/daily-analytics.entity';
+import { ReadLog } from './entities/read-log.entity';
 
 @Injectable()
 export class AnalyticsService {
   /** Initializes the AnalyticsService with the Article repository */
-  constructor(@InjectRepository(Article) private readonly articleRepository: Repository<Article>) {}
+  constructor(
+    @InjectRepository(Article) private readonly articleRepository: Repository<Article>,
+    @InjectRepository(ReadLog) private readonly readLogRepository: Repository<ReadLog>,
+  ) {}
 
   /** Retrieves paginated article performance metrics for a specific author, including total views */
   async getAuthorPerformance(authorId: string, query: DashboardQueryDto) {
@@ -44,5 +48,15 @@ export class AnalyticsService {
       TotalSize: total,
       Errors: null,
     };
+  }
+
+  /** Logs a read event for an article */
+  async trackArticleRead(articleId: string, ip: string, readerId?: string) {
+    await this.readLogRepository.save({
+      articleId,
+      ip,
+      readerId,
+      readAt: new Date(),
+    });
   }
 }

@@ -46,7 +46,6 @@ export class ReadLogWorker implements OnModuleInit, OnModuleDestroy {
           };
 
           await this.readLogRepo.save(this.readLogRepo.create(entry));
-          this.logger.debug(`Saved read-log for article ${articleId} reader ${readerId}`);
         } catch (e) {
           this.logger.error('Failed to persist read-log', e as any);
           throw e;

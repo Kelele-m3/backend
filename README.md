@@ -69,11 +69,11 @@ You must have [Node.js](https://nodejs.org/), [PostgreSQL](https://www.postgresq
     Create a `.env` file in the project root. The application requires this to connect to the database and other services.
     ```env
     # PostgreSQL
-    DATABASE_HOST=localhost
-    DATABASE_PORT=5432
-    DATABASE_USERNAME=postgres
-    DATABASE_PASSWORD=postgres
-    DATABASE_NAME=news_api
+    DATABASE_HOST='localhost'
+    DATABASE_PORT='5432'
+    DATABASE_USERNAME='your db user name'
+    DATABASE_PASSWORD='your db password'
+    DATABASE_NAME='news_api'
 
     # Redis
     REDIS_HOST=localhost
@@ -86,7 +86,7 @@ You must have [Node.js](https://nodejs.org/), [PostgreSQL](https://www.postgresq
 4.  **Create the database**
     This script uses the variables from your `.env` file.
     ```bash
-    $ ts-node scripts/create-db.ts
+    npm run create:db
     ```
 
 5.  **Set up Database Schema**
@@ -110,18 +110,3 @@ You must have [Node.js](https://nodejs.org/), [PostgreSQL](https://www.postgresq
 ## API Documentation
 
 Once the application is running, you can explore the API endpoints and interact with them through the Swagger documentation, available at http://localhost:3000/api.
-
-## Testing
-
-Run end-to-end tests:
-```bash
-# e2e tests
-$ npm run test:e2e
-```
-
-Generate a test coverage report:
-```bash
-# test coverage
-$ npm run test:cov
-```
-```

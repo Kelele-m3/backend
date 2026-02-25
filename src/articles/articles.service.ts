@@ -66,10 +66,6 @@ export class ArticlesService {
       throw new NotFoundException('News article no longer available');
     }
 
-    if (article.status === ArticleStatus.Draft && article.authorId !== readerId) {
-      throw new NotFoundException('News article no longer available');
-    }
-
     try {
       await this.readLogQueue.add('create', { articleId: id, readerId: readerId ?? null });
     } catch (e) {

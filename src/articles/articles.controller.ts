@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Req, Get, Query, Param, Put, Delete, UseGuards, } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { ArticlesService } from './articles.service';
@@ -113,7 +114,7 @@ export class ArticlesController {
   // Endpoint to get a specific article by ID
   @Get(':id')
   @ApiOperation({ summary: 'Get article details' })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth()
   async findOne(@Param('id') id: string, @Req() req: any) {
     const user = req.user;
@@ -122,7 +123,6 @@ export class ArticlesController {
       const article = await this.articlesService.findOne(id, userId);
       return this.baseResponse(true, 'OK', article);
     } catch (e: any) {
-      console.error(e);
       return this.baseResponse(false, e.message ?? 'Error', null, [e.message]);
     }
   }
